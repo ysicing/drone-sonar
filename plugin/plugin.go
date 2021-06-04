@@ -19,14 +19,16 @@ type (
 		Key   string
 		Host  string
 		Token string
+		User  string
+		Pass  string
 		// Branch         string
-		Sources        string
-		Timeout        string
-		Inclusions     string
-		Exclusions     string
-		Level          string
+		Sources         string
+		Timeout         string
+		Inclusions      string
+		Exclusions      string
+		Level           string
 		UsingProperties bool
-		Debug bool
+		Debug           bool
 	}
 	Plugin struct {
 		Config Config
@@ -37,7 +39,7 @@ func (p Plugin) getProjectKey() string {
 	return strings.Replace(p.Config.Key, "/", ":", -1)
 }
 
-func (p Plugin) Exec() error  {
+func (p Plugin) Exec() error {
 	if err := p.Check(); err != nil {
 		return err
 	}
@@ -103,7 +105,6 @@ func downloadFile(location string) (filePATH string) {
 	}
 	return location
 }
-
 
 func downloadCmd(url string) string {
 	//only http
