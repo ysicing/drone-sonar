@@ -19,7 +19,7 @@ type (
 		User  string
 		Pass  string
 		// Branch         string
-		Version         string
+		PV         string
 		Sources         string
 		Timeout         string
 		Inclusions      string
@@ -94,8 +94,8 @@ func (p Plugin) Check() error {
 }
 
 func (p Plugin) git() string {
-	if len(p.Config.Version) != 0 {
-		return p.Config.Version
+	if len(p.Config.PV) != 0 {
+		return p.Config.PV
 	}
 	gitres := cmd.CmdToString("git rev-parse --short HEAD")
 	if len(gitres) != 0 {

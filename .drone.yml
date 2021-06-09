@@ -4,9 +4,34 @@ type: kubernetes
 name: scan
 clone:
   depth: 1
-  disable: false
+  disable: true
 
 steps:
+  - name: 获取代码
+    image: hub.51talk.biz/citools/git:release-3.0-2021011211
+    pull: always
+    settings:
+      depth: 1
+      branch: "master"
+      url: "git@code.51talk.com:op/drone-sonar-plugin.git"
+
+  - name: 构建应用中心镜像
+    image: hub.51talk.biz/citools/builder:release-3.1-202103231930
+    volumes:
+      - name: dockersock
+        path: /var/run
+    pull: always
+    privileged: true
+    settings:
+      registry: hub.51talk.biz
+      repo: "hub.51talk.biz/citools/drone-sonar"
+      debug: false
+      mode: "dev"
+      tags: "latest"
+      purge: false
+      no_cache: "false"
+      dockerfile: "Dockerfile"
+
   - name: scan
     image: hub.51talk.biz/citools/drone-sonar
     pull: always
@@ -15,22 +40,19 @@ steps:
       host: http://scan.code.51talk.com
       token: c17870c021f92e603696b1e80082cd72837a6061
 
-#services:
-#  - name: docker daemon
-#    image: hub.51talk.biz/citools/dockerd:release-3.1-2021032319
-#    privileged: true
-#    volumes:
-#      - name: dockersock
-#        path: /var/run
+services:
+  - name: docker daemon
+    image: hub.51talk.biz/citools/dockerd:release-3.1-2021032319
+    privileged: true
+    volumes:
+      - name: dockersock
+        path: /var/run
   # - name: proxy
   #   image: hub.51talk.biz/citools/proxy:release-3.1-2021032219
 
-#volumes:
-#  - name: dockersock
-#    temp: {}
-#  - name: cache
-#    claim:
-#      name: ci-drone-cache
+volumes:
+  - name: dockersock
+    temp: {}
 
 node_selector:
   workload_type: "spot"
