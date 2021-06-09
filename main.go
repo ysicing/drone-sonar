@@ -84,6 +84,11 @@ func main() {
 		//	EnvVars: []string{"DRONE_BRANCH", "PLUGIN_BRANCH", "BRANCH"},
 		//},
 		&cli.StringFlag{
+			Name:    "version",
+			Usage:   "Project version",
+			EnvVars: []string{"VERSION", "PLUGIN_VERSION"},
+		},
+		&cli.StringFlag{
 			Name:    "timeout",
 			Usage:   "Web request timeout",
 			Value:   "60",
@@ -113,6 +118,7 @@ func run(c *cli.Context) error {
 		User:  c.String("user"),
 		Pass:  c.String("pass"),
 		// Branch:          c.String("branch"),
+		Version:    c.String("version"),
 		Sources:    c.String("sources"),
 		Timeout:    c.String("timeout"),
 		Inclusions: c.String("inclusions"),

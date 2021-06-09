@@ -4,13 +4,10 @@
 package plugin
 
 import (
-	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/ysicing/drone-sonar/pkg/cmd"
-	"net/url"
 	"os"
 	"os/exec"
-	"path"
 	"strings"
 )
 
@@ -22,6 +19,7 @@ type (
 		User  string
 		Pass  string
 		// Branch         string
+		Version         string
 		Sources         string
 		Timeout         string
 		Inclusions      string
@@ -67,6 +65,9 @@ func (p Plugin) Exec() error {
 	//if len(p.Config.Branch) != 0 {
 	//	args = append(args, "-Dsonar.branch.name=" + p.Config.Branch)
 	//}
+
+	args = append(args, "-Dsonar.projectVersion=" + p.git())
+
 	if p.Config.Debug {
 		debugargs := []string{
 			"-Dsonar.showProfiling=true",
@@ -92,37 +93,13 @@ func (p Plugin) Check() error {
 	return nil
 }
 
-func downloadFile(location string) (filePATH string) {
-	if _, isUrl := isUrl(location); isUrl {
-		absPATH := "/tmp/drone-sonar/" + path.Base(location)
-		if !cmd.IsFileExist(absPATH) {
-			//generator download cmd
-			dwnCmd := downloadCmd(location)
-			//os exec download command
-			cmd.Cmd("/bin/sh", "-c", "mkdir -p /tmp/drone-sonar && cd /tmp/drone-sonar && "+dwnCmd)
-		}
-		location = absPATH
+func (p Plugin) git() string {
+	if len(p.Config.Version) != 0 {
+		return p.Config.Version
 	}
-	return location
-}
-
-func downloadCmd(url string) string {
-	//only http
-	u, isHttp := isUrl(url)
-	var c = ""
-	if isHttp {
-		param := ""
-		if u.Scheme == "https" {
-			param = "--no-check-certificate"
-		}
-		c = fmt.Sprintf(" wget -c %s %s", param, url)
+	gitres := cmd.CmdToString("git rev-parse --short HEAD")
+	if len(gitres) != 0 {
+		return gitres
 	}
-	return c
-}
-
-func isUrl(u string) (url.URL, bool) {
-	if uu, err := url.Parse(u); err == nil && uu != nil && uu.Host != "" {
-		return *uu, true
-	}
-	return url.URL{}, false
+	return "unknow"
 }
