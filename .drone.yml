@@ -1,0 +1,59 @@
+---
+kind: pipeline
+type: kubernetes
+name: scan
+clone:
+  depth: 1
+  disable: false
+
+steps:
+  - name: scan
+    image: hub.51talk.biz/citools/drone-sonar
+    pull: always
+    settings:
+      key: op_drone-sonar-plugin_AXnvo86KGZIov3Sxa7Sj
+      host: http://scan.code.51talk.com
+      token: c17870c021f92e603696b1e80082cd72837a6061
+
+#services:
+#  - name: docker daemon
+#    image: hub.51talk.biz/citools/dockerd:release-3.1-2021032319
+#    privileged: true
+#    volumes:
+#      - name: dockersock
+#        path: /var/run
+  # - name: proxy
+  #   image: hub.51talk.biz/citools/proxy:release-3.1-2021032219
+
+#volumes:
+#  - name: dockersock
+#    temp: {}
+#  - name: cache
+#    claim:
+#      name: ci-drone-cache
+
+node_selector:
+  workload_type: "spot"
+
+tolerations:
+  - key: devops.51talk.me/ci
+    operator: Exists
+    effect: NoSchedule
+
+dns_config:
+  nameservers:
+    - 172.18.0.3
+
+host_aliases:
+  - ip: 172.16.0.204
+    hostnames:
+      - vcs.51talk.com
+  - ip: 10.0.7.248
+    hostnames:
+      - code.51talk.com
+  - ip: 172.16.72.42
+    hostnames:
+      - mirrors.51talk.com
+
+
+
