@@ -16,9 +16,9 @@ COPY . /go/src/
 
 RUN go build
 
-FROM koalaman/shellcheck-alpine:stable as shellcheck
+FROM hub.51talk.biz/citools/shellcheck-alpine:stable as shellcheck
 
-FROM sonarsource/sonar-scanner-cli:4.6
+FROM hub.51talk.biz/citools/sonar-scanner-cli:4.6
 
 LABEL MAINTAINER=ysicing
 
