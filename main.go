@@ -58,7 +58,7 @@ func main() {
 		&cli.StringFlag{
 			Name:    "pass",
 			Usage:   "sonar user password",
-			Value:   "admin",
+			Value: "",
 			EnvVars: []string{"PASS", "PLUGIN_PASS"},
 		},
 		&cli.BoolFlag{
@@ -105,26 +105,26 @@ func main() {
 			Aliases: []string{"exs"},
 			Usage:   "code exclusions",
 			EnvVars: []string{"PLUGIN_EXCLUSIONS", "EXCLUSIONS", "EXS"},
+			Value: "*.conf,*.yaml,*.ini,*.properties,*.json,*.xml,*.toml",
 		},
 	}
 	app.Run(os.Args)
 }
 
 func run(c *cli.Context) error {
-	p := plugin.Plugin{Config: plugin.Config{
+	p := &plugin.Plugin{Config: plugin.Config{
 		Key:   c.String("key"),
 		Host:  c.String("host"),
 		Token: c.String("login"),
 		User:  c.String("user"),
 		Pass:  c.String("pass"),
-		// Branch:          c.String("branch"),
+		Branch:          c.String("branch"),
 		PV:    c.String("pv"),
 		Sources:    c.String("sources"),
 		Timeout:    c.String("timeout"),
 		Inclusions: c.String("inclusions"),
 		Exclusions: c.String("exclusions"),
 		Level:      c.String("level"),
-		// BranchAnalysis:  true,
 		UsingProperties: c.Bool("usingProperties"),
 		Debug:           c.Bool("debug"),
 	}}

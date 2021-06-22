@@ -38,7 +38,6 @@ steps:
     settings:
       key: op_drone-sonar-plugin_AXnvo86KGZIov3Sxa7Sj
       host: http://scan.code.51talk.com
-      token: c17870c021f92e603696b1e80082cd72837a6061
 
 services:
   - name: docker daemon
