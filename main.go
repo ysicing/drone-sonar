@@ -58,7 +58,7 @@ func main() {
 		&cli.StringFlag{
 			Name:    "pass",
 			Usage:   "sonar user password",
-			Value: "",
+			Value:   "",
 			EnvVars: []string{"PASS", "PLUGIN_PASS"},
 		},
 		&cli.BoolFlag{
@@ -78,8 +78,8 @@ func main() {
 			EnvVars: []string{"PLUGIN_LEVEL", "LEVEL"},
 		},
 		&cli.StringFlag{
-			Name:   "branch",
-			Usage:  "Project branch",
+			Name:    "branch",
+			Usage:   "Project branch",
 			EnvVars: []string{"DRONE_BRANCH", "PLUGIN_BRANCH", "BRANCH"},
 		},
 		&cli.StringFlag{
@@ -104,26 +104,29 @@ func main() {
 			Aliases: []string{"exs"},
 			Usage:   "code exclusions",
 			EnvVars: []string{"PLUGIN_EXCLUSIONS", "EXCLUSIONS", "EXS"},
-			Value: "*.conf,*.yaml,*.ini,*.properties,*.json,*.xml,*.toml",
+			Value:   "*.conf,*.yaml,*.ini,*.properties,*.json,*.xml,*.toml",
 		},
 	}
-	app.Run(os.Args)
+	if err := app.Run(os.Args); err != nil {
+		logrus.Errorf("app run err: %v", err)
+		os.Exit(-1)
+	}
 }
 
 func run(c *cli.Context) error {
 	p := &plugin.Plugin{Config: plugin.Config{
-		Key:   c.String("key"),
-		Host:  c.String("host"),
-		Token: c.String("login"),
-		User:  c.String("user"),
-		Pass:  c.String("pass"),
+		Key:             c.String("key"),
+		Host:            c.String("host"),
+		Token:           c.String("login"),
+		User:            c.String("user"),
+		Pass:            c.String("pass"),
 		Branch:          c.String("branch"),
-		PV:    c.String("pv"),
-		Sources:    c.String("sources"),
-		Timeout:    c.String("timeout"),
-		Inclusions: c.String("inclusions"),
-		Exclusions: c.String("exclusions"),
-		Level:      c.String("level"),
+		PV:              c.String("pv"),
+		Sources:         c.String("sources"),
+		Timeout:         c.String("timeout"),
+		Inclusions:      c.String("inclusions"),
+		Exclusions:      c.String("exclusions"),
+		Level:           c.String("level"),
 		UsingProperties: c.Bool("usingProperties"),
 		Debug:           c.Bool("debug"),
 	}}

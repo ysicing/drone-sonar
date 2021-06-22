@@ -23,18 +23,18 @@ func Api(sonarurl, sonaruser, sonarpass, sonarkey string) (*CIScan, error) {
 		return nil, err
 	}
 	return &CIScan{
-		Key:  sonarkey,
+		Key:    sonarkey,
 		client: c,
 	}, nil
 }
 
 type CIScan struct {
-	Key string
+	Key         string
 	TokenPrefix string
-	client *sonarapi.Client
+	client      *sonarapi.Client
 }
 
-func (ci *CIScan) tokenprefix() string  {
+func (ci *CIScan) tokenprefix() string {
 	if len(ci.TokenPrefix) == 0 {
 		ci.TokenPrefix = getToday()
 	}
@@ -43,7 +43,7 @@ func (ci *CIScan) tokenprefix() string  {
 
 func (ci *CIScan) CheckProject() (bool, error) {
 	s := sonarapi.ProjectsSearchOption{
-		Q:                 ci.Key,
+		Q: ci.Key,
 	}
 	v, _, err := ci.client.Projects.Search(&s)
 	if err != nil {

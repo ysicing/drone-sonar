@@ -10,19 +10,20 @@ import (
 	"github.com/ysicing/sonarapi"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 	"time"
 )
 
 type (
 	Config struct {
-		Key   string
-		Host  string
-		Token string
-		User  string
-		Pass  string
-		Branch         string
-		PV         string
+		Key             string
+		Host            string
+		Token           string
+		User            string
+		Pass            string
+		Branch          string
+		PV              string
 		Sources         string
 		Timeout         string
 		Inclusions      string
@@ -69,7 +70,7 @@ func (p *Plugin) Exec() error {
 		args = append(args, "")
 	}
 
-	args = append(args, "-Dsonar.branch.name=" + gitbranch)
+	args = append(args, "-Dsonar.branch.name="+gitbranch)
 	args = append(args, fmt.Sprintf("-Dsonar.projectVersion=%v-%v-%v", gitbranch, getToday(), gitsha))
 
 	if p.Config.Debug {
@@ -136,18 +137,14 @@ func (p *Plugin) gitsha() string {
 		return p.Config.PV
 	}
 	gitres := cmd.CmdToString("git rev-parse --short HEAD")
-	if len(gitres) == 0 {
-		gitres = "unknow"
-	}
+	gitres = gitutil(gitres)
 	logrus.Debugf("==> Check Git Commit Sha: %v", gitres)
 	return gitres
 }
 
-func (p *Plugin) gitbranch() string  {
+func (p *Plugin) gitbranch() string {
 	gitres := cmd.CmdToString("git symbolic-ref --short -q HEAD")
-	if len(gitres) == 0 {
-		gitres = "unknow"
-	}
+	gitres = gitutil(gitres)
 	if len(p.Config.Branch) != 0 && p.Config.Branch != gitres {
 		logrus.Warnf("==> Detect Git Branch: %v, Use Branch: %v", gitres, p.Config.Branch)
 		return p.Config.Branch
@@ -156,7 +153,17 @@ func (p *Plugin) gitbranch() string  {
 	return gitres
 }
 
-func (p *Plugin) RevokeToken()  {
+func gitutil(g string) string {
+	if len(g) == 0 {
+		g = "unknow"
+	} else {
+		reg := regexp.MustCompile(`\s+`)
+		g = reg.ReplaceAllString(g, "")
+	}
+	return g
+}
+
+func (p *Plugin) RevokeToken() {
 	api, err := Api(p.Config.Host, p.Config.User, p.Config.Pass, p.getProjectKey())
 	if err != nil {
 		logrus.Errorf("==> Revoke temporary token err")
