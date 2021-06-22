@@ -39,7 +39,7 @@ func main() {
 		&cli.StringFlag{
 			Name:    "host",
 			Usage:   "sonar host",
-			Value:   "https://scan.code.51talk.com",
+			Value:   "http://scan.code.51talk.com",
 			EnvVars: []string{"HOST", "SONAR_HOST", "PLUGIN_HOST", "PLUGIN_SONAR_HOST"},
 		},
 		&cli.StringFlag{
@@ -52,7 +52,7 @@ func main() {
 		&cli.StringFlag{
 			Name:    "user",
 			Usage:   "sonar user",
-			Value:   "admin",
+			Value:   "",
 			EnvVars: []string{"USER", "PLUGIN_USER"},
 		},
 		&cli.StringFlag{
@@ -77,12 +77,11 @@ func main() {
 			Value:   "INFO",
 			EnvVars: []string{"PLUGIN_LEVEL", "LEVEL"},
 		},
-		//&cli.StringFlag{
-		//	Name:   "branch",
-		//	Aliases: []string{"b"},
-		//	Usage:  "Project branch",
-		//	EnvVars: []string{"DRONE_BRANCH", "PLUGIN_BRANCH", "BRANCH"},
-		//},
+		&cli.StringFlag{
+			Name:   "branch",
+			Usage:  "Project branch",
+			EnvVars: []string{"DRONE_BRANCH", "PLUGIN_BRANCH", "BRANCH"},
+		},
 		&cli.StringFlag{
 			Name:    "pv",
 			Usage:   "Project version",
