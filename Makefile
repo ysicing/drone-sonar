@@ -3,3 +3,12 @@ build: ## 构建二进制
 	# go get github.com/mitchellh/gox
 	@gox -osarch="darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64" \
         -output="dist/{{.Dir}}_{{.OS}}_{{.Arch}}"
+
+lint:
+	golangci-lint run  ./...
+
+
+scan:
+	go run main.go --key "op_drone-sonar-plugin_AXnvo86KGZIov3Sxa7Sj"
+
+default: lint scan
