@@ -39,7 +39,7 @@ func main() {
 		&cli.StringFlag{
 			Name:    "host",
 			Usage:   "sonar host",
-			Value:   "",
+			Value:   "https://scan.code.51talk.com",
 			EnvVars: []string{"HOST", "SONAR_HOST", "PLUGIN_HOST", "PLUGIN_SONAR_HOST"},
 		},
 		&cli.StringFlag{
