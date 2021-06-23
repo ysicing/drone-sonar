@@ -37,3 +37,16 @@ func CmdToString(args string) string {
 	}
 	return b.String()
 }
+
+//CmdToStdout is exec on os , return result
+func CmdToStdout(args string) {
+	logrus.Debugf("[os]exec cmd is :%v", args)
+	cmd := exec.Command("/bin/sh", "-c", args)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stdout
+	err := cmd.Run()
+	if err != nil {
+		logrus.Errorf("[os]os call error: %v", err)
+		return
+	}
+}

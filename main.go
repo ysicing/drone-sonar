@@ -17,8 +17,8 @@ func init() {
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "drone sonar"
-	app.Usage = "Drone Sonar"
+	app.Name = "sonar scan cli"
+	app.Usage = "Drone Sonar Cli. Usage: hub.51talk.biz/citools/drone-sonar"
 	app.Action = run
 	app.Version = "0.0.1"
 	app.Flags = []cli.Flag{
@@ -106,6 +106,12 @@ func main() {
 			EnvVars: []string{"PLUGIN_EXCLUSIONS", "EXCLUSIONS", "EXS"},
 			Value:   "*.conf,*.yaml,*.ini,*.properties,*.json,*.xml,*.toml",
 		},
+		&cli.StringSliceFlag{
+			Name:    "extargs",
+			Usage:   "sonar ext args, like: -Dsonar.java.libraries=path/to/Library.jar",
+			EnvVars: []string{"EXTARGS", "PLUGIN_EXTARGS"},
+			Value:   nil,
+		},
 	}
 	if err := app.Run(os.Args); err != nil {
 		logrus.Errorf("app run err: %v", err)
@@ -129,6 +135,7 @@ func run(c *cli.Context) error {
 		Level:           c.String("level"),
 		UsingProperties: c.Bool("usingProperties"),
 		Debug:           c.Bool("debug"),
+		ExtSonarArgs:    c.StringSlice("extargs"),
 	}}
 	return p.Exec()
 }
