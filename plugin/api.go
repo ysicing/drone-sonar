@@ -5,6 +5,7 @@ package plugin
 
 import (
 	"fmt"
+
 	"github.com/ysicing/sonarapi"
 )
 
@@ -23,18 +24,18 @@ func Api(sonarurl, sonaruser, sonarpass, sonarkey string) (*CIScan, error) {
 		return nil, err
 	}
 	return &CIScan{
-		Key:  sonarkey,
+		Key:    sonarkey,
 		client: c,
 	}, nil
 }
 
 type CIScan struct {
-	Key string
+	Key         string
 	TokenPrefix string
-	client *sonarapi.Client
+	client      *sonarapi.Client
 }
 
-func (ci *CIScan) tokenprefix() string  {
+func (ci *CIScan) tokenprefix() string {
 	if len(ci.TokenPrefix) == 0 {
 		ci.TokenPrefix = getToday()
 	}
@@ -43,7 +44,7 @@ func (ci *CIScan) tokenprefix() string  {
 
 func (ci *CIScan) CheckProject() (bool, error) {
 	s := sonarapi.ProjectsSearchOption{
-		Q:                 ci.Key,
+		Q: ci.Key,
 	}
 	v, _, err := ci.client.Projects.Search(&s)
 	if err != nil {
@@ -76,6 +77,10 @@ func (ci *CIScan) CreateProject() error {
 	return fmt.Errorf("resp code >= 400")
 }
 
+func (ci *CIScan) name() string {
+	return fmt.Sprintf("ci-%v-%v", ci.tokenprefix(), ci.Key)
+}
+
 func (ci *CIScan) GenerateToken() (string, error) {
 	if ci.SearchToken() {
 		if err := ci.RevokeToken(); err != nil {
@@ -84,7 +89,7 @@ func (ci *CIScan) GenerateToken() (string, error) {
 	}
 
 	s := sonarapi.UserTokensGenerateOption{
-		Name: fmt.Sprintf("ci-%v-%v", ci.tokenprefix(), ci.Key),
+		Name: ci.name(),
 	}
 	v, _, err := ci.client.UserTokens.Generate(&s)
 	if err != nil {
@@ -98,7 +103,7 @@ func (ci *CIScan) GenerateToken() (string, error) {
 
 func (ci *CIScan) RevokeToken() error {
 	s := sonarapi.UserTokensRevokeOption{
-		Name: fmt.Sprintf("ci-%v-%v", ci.tokenprefix(), ci.Key),
+		Name: ci.name(),
 	}
 	_, err := ci.client.UserTokens.Revoke(&s)
 	if err != nil {
@@ -113,9 +118,8 @@ func (ci *CIScan) SearchToken() bool {
 	if err != nil {
 		return false
 	}
-	// Name: fmt.Sprintf("ci-%v-%v", ci.tokenprefix(), ci.Key),
 	for _, v := range v.UserTokens {
-		if v.Name == fmt.Sprintf("ci-%v-%v", ci.tokenprefix(), ci.Key) {
+		if v.Name == ci.name() {
 			return true
 		}
 	}

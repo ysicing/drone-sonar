@@ -4,10 +4,11 @@
 package main
 
 import (
+	"os"
+
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	"github.com/ysicing/drone-sonar/plugin"
-	"os"
 )
 
 func init() {
@@ -17,8 +18,8 @@ func init() {
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "drone sonar"
-	app.Usage = "Drone Sonar"
+	app.Name = "sonar scan cli"
+	app.Usage = "Drone Sonar Cli"
 	app.Action = run
 	app.Version = "0.0.1"
 	app.Flags = []cli.Flag{
@@ -39,7 +40,7 @@ func main() {
 		&cli.StringFlag{
 			Name:    "host",
 			Usage:   "sonar host",
-			Value:   "",
+			Value:   "http://sonar.ops.com",
 			EnvVars: []string{"HOST", "SONAR_HOST", "PLUGIN_HOST", "PLUGIN_SONAR_HOST"},
 		},
 		&cli.StringFlag{
@@ -52,13 +53,13 @@ func main() {
 		&cli.StringFlag{
 			Name:    "user",
 			Usage:   "sonar user",
-			Value:   "admin",
+			Value:   "",
 			EnvVars: []string{"USER", "PLUGIN_USER"},
 		},
 		&cli.StringFlag{
 			Name:    "pass",
 			Usage:   "sonar user password",
-			Value: "",
+			Value:   "",
 			EnvVars: []string{"PASS", "PLUGIN_PASS"},
 		},
 		&cli.BoolFlag{
@@ -77,12 +78,16 @@ func main() {
 			Value:   "INFO",
 			EnvVars: []string{"PLUGIN_LEVEL", "LEVEL"},
 		},
-		//&cli.StringFlag{
-		//	Name:   "branch",
-		//	Aliases: []string{"b"},
-		//	Usage:  "Project branch",
-		//	EnvVars: []string{"DRONE_BRANCH", "PLUGIN_BRANCH", "BRANCH"},
-		//},
+		&cli.StringFlag{
+			Name:    "branch",
+			Usage:   "Project branch",
+			EnvVars: []string{"DRONE_BRANCH", "PLUGIN_BRANCH", "BRANCH"},
+		},
+		&cli.StringFlag{
+			Name:    "pv",
+			Usage:   "Project version",
+			EnvVars: []string{"VERSION", "PLUGIN_VERSION"},
+		},
 		&cli.StringFlag{
 			Name:    "pv",
 			Usage:   "Project version",
@@ -105,28 +110,38 @@ func main() {
 			Aliases: []string{"exs"},
 			Usage:   "code exclusions",
 			EnvVars: []string{"PLUGIN_EXCLUSIONS", "EXCLUSIONS", "EXS"},
-			Value: "*.conf,*.yaml,*.ini,*.properties,*.json,*.xml,*.toml",
+			Value:   "*.conf,*.yaml,*.ini,*.properties,*.json,*.xml,*.toml",
+		},
+		&cli.StringSliceFlag{
+			Name:    "extargs",
+			Usage:   "sonar ext args, like: -Dsonar.java.libraries=path/to/Library.jar",
+			EnvVars: []string{"EXTARGS", "PLUGIN_EXTARGS"},
+			Value:   nil,
 		},
 	}
-	app.Run(os.Args)
+	if err := app.Run(os.Args); err != nil {
+		logrus.Errorf("app run err: %v", err)
+		os.Exit(-1)
+	}
 }
 
 func run(c *cli.Context) error {
 	p := &plugin.Plugin{Config: plugin.Config{
-		Key:   c.String("key"),
-		Host:  c.String("host"),
-		Token: c.String("login"),
-		User:  c.String("user"),
-		Pass:  c.String("pass"),
+		Key:             c.String("key"),
+		Host:            c.String("host"),
+		Token:           c.String("login"),
+		User:            c.String("user"),
+		Pass:            c.String("pass"),
 		Branch:          c.String("branch"),
-		PV:    c.String("pv"),
-		Sources:    c.String("sources"),
-		Timeout:    c.String("timeout"),
-		Inclusions: c.String("inclusions"),
-		Exclusions: c.String("exclusions"),
-		Level:      c.String("level"),
+		PV:              c.String("pv"),
+		Sources:         c.String("sources"),
+		Timeout:         c.String("timeout"),
+		Inclusions:      c.String("inclusions"),
+		Exclusions:      c.String("exclusions"),
+		Level:           c.String("level"),
 		UsingProperties: c.Bool("usingProperties"),
 		Debug:           c.Bool("debug"),
+		ExtSonarArgs:    c.StringSlice("extargs"),
 	}}
 	return p.Exec()
 }

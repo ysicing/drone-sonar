@@ -5,24 +5,27 @@ package plugin
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/ysicing/drone-sonar/pkg/cmd"
-	"github.com/ysicing/sonarapi"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 	"time"
+
+	"github.com/sirupsen/logrus"
+	"github.com/ysicing/drone-sonar/pkg/build"
+	"github.com/ysicing/drone-sonar/pkg/cmd"
+	"github.com/ysicing/sonarapi"
 )
 
 type (
 	Config struct {
-		Key   string
-		Host  string
-		Token string
-		User  string
-		Pass  string
-		Branch         string
-		PV         string
+		Key             string
+		Host            string
+		Token           string
+		User            string
+		Pass            string
+		Branch          string
+		PV              string
 		Sources         string
 		Timeout         string
 		Inclusions      string
@@ -30,6 +33,8 @@ type (
 		Level           string
 		UsingProperties bool
 		Debug           bool
+		Lang            string
+		ExtSonarArgs    []string
 	}
 	Plugin struct {
 		Config Config
@@ -48,7 +53,11 @@ func (p *Plugin) Exec() error {
 	args := []string{
 		"-Dsonar.host.url=" + p.Config.Host,
 		"-Dsonar.login=" + p.Config.Token,
-		"-Dsonar.sourceEncoding=UTF-8",
+	}
+
+	p.preCompile()
+	if p.Config.Lang != "no" {
+		args = append(args, fmt.Sprintf("-Dsonar.language=%v", p.Config.Lang))
 	}
 
 	gitbranch := p.gitbranch()
@@ -65,11 +74,11 @@ func (p *Plugin) Exec() error {
 			"-Dsonar.scm.provider=git",
 		}
 		args = append(args, argsParameter...)
-	} else {
-		args = append(args, "")
 	}
 
-	args = append(args, "-Dsonar.branch.name=" + gitbranch)
+	args = append(args, analysis()...)
+
+	args = append(args, "-Dsonar.branch.name="+gitbranch)
 	args = append(args, fmt.Sprintf("-Dsonar.projectVersion=%v-%v-%v", gitbranch, getToday(), gitsha))
 
 	if p.Config.Debug {
@@ -79,6 +88,21 @@ func (p *Plugin) Exec() error {
 		}
 		args = append(args, debugargs...)
 	}
+
+	if len(p.Config.ExtSonarArgs) > 0 {
+		for _, arg := range p.Config.ExtSonarArgs {
+			if len(strings.Split(arg, "=")) == 2 {
+				if strings.HasSuffix(arg, "-D") {
+					args = append(args, arg)
+				} else {
+					args = append(args, fmt.Sprintf("-D%v", arg))
+				}
+			} else {
+				logrus.Warnf("ext args: %v err, skip", arg)
+			}
+		}
+	}
+
 	cmd := exec.Command("sonar-scanner", args...)
 	logrus.Debugf("==> Executing: %s\n", strings.Join(cmd.Args, " "))
 	cmd.Stdout = os.Stdout
@@ -136,18 +160,14 @@ func (p *Plugin) gitsha() string {
 		return p.Config.PV
 	}
 	gitres := cmd.CmdToString("git rev-parse --short HEAD")
-	if len(gitres) == 0 {
-		gitres = "unknow"
-	}
+	gitres = gitutil(gitres)
 	logrus.Debugf("==> Check Git Commit Sha: %v", gitres)
 	return gitres
 }
 
-func (p *Plugin) gitbranch() string  {
+func (p *Plugin) gitbranch() string {
 	gitres := cmd.CmdToString("git symbolic-ref --short -q HEAD")
-	if len(gitres) == 0 {
-		gitres = "unknow"
-	}
+	gitres = gitutil(gitres)
 	if len(p.Config.Branch) != 0 && p.Config.Branch != gitres {
 		logrus.Warnf("==> Detect Git Branch: %v, Use Branch: %v", gitres, p.Config.Branch)
 		return p.Config.Branch
@@ -156,7 +176,34 @@ func (p *Plugin) gitbranch() string  {
 	return gitres
 }
 
-func (p *Plugin) RevokeToken()  {
+func (p *Plugin) preCompile() {
+	p.Config.Lang = build.GetLangType(p.Config.Sources).String()
+	logrus.Debugf("==> Pre Compile Detect LANGUAGE: %v", p.Config.Lang)
+	switch p.Config.Lang {
+	case "go":
+		p.Config.Exclusions = "*.conf,*.yaml,*.ini,*.properties,*.json,*.xml,*.toml,**/*_test.go,**/vendor/**"
+		// p.Config.ExtSonarArgs = append(p.Config.ExtSonarArgs, "-Dsonar.go.golangci-lint.reportPaths=report.xml")
+		// p.runlint("golangci-lint run --out-format checkstyle ./... > report.xml")
+	}
+}
+
+// func (p *Plugin) runlint(lintcmd string) {
+// 	logrus.Debugf("==> Lint Code")
+// 	cmd.CmdToStdout(lintcmd)
+// 	logrus.Debugf("==> Lint Code Done")
+// }
+
+func gitutil(g string) string {
+	if len(g) == 0 {
+		g = "unknow"
+	} else {
+		reg := regexp.MustCompile(`\s+`)
+		g = reg.ReplaceAllString(g, "")
+	}
+	return g
+}
+
+func (p *Plugin) RevokeToken() {
 	api, err := Api(p.Config.Host, p.Config.User, p.Config.Pass, p.getProjectKey())
 	if err != nil {
 		logrus.Errorf("==> Revoke temporary token err")
@@ -171,4 +218,8 @@ func (p *Plugin) RevokeToken()  {
 
 func getToday() string {
 	return time.Now().Format("20060102")
+}
+
+func analysis() []string {
+	return []string{"-Dsonar.sourceEncoding=UTF-8", "-Dsonar.analysis.runtype=gaeaapi"}
 }
