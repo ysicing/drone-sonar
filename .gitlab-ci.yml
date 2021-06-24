@@ -1,0 +1,5 @@
+build:
+  stage: build
+  script:
+    - ops-code-scan --key=op_drone-sonar-plugin_AXnvo86KGZIov3Sxa7Sj
+
