@@ -160,14 +160,14 @@ func (p *Plugin) gitsha() string {
 		return p.Config.PV
 	}
 	gitres := cmd.CmdToString("git rev-parse --short HEAD")
-	gitres = gitutil(gitres)
+	gitres = gitutil(gitres, "sha")
 	logrus.Debugf("==> Check Git Commit Sha: %v", gitres)
 	return gitres
 }
 
 func (p *Plugin) gitbranch() string {
 	gitres := cmd.CmdToString("git symbolic-ref --short -q HEAD")
-	gitres = gitutil(gitres)
+	gitres = gitutil(gitres, "branch")
 	if len(p.Config.Branch) != 0 && p.Config.Branch != gitres {
 		logrus.Warnf("==> Detect Git Branch: %v, Use Branch: %v", gitres, p.Config.Branch)
 		return p.Config.Branch
@@ -193,9 +193,16 @@ func (p *Plugin) preCompile() {
 // 	logrus.Debugf("==> Lint Code Done")
 // }
 
-func gitutil(g string) string {
+func gitutil(g, mode string) string {
 	if len(g) == 0 {
-		g = "unknow"
+		switch mode {
+		case "branch":
+			g = getEnv("CI_COMMIT_REF_NAME", "unknow")
+		case "sha":
+			g = getEnv("CI_COMMIT_SHA", "unknow")
+		default:
+			g = "unknow"
+		}
 	} else {
 		reg := regexp.MustCompile(`\s+`)
 		g = reg.ReplaceAllString(g, "")
@@ -222,4 +229,13 @@ func getToday() string {
 
 func analysis() []string {
 	return []string{"-Dsonar.sourceEncoding=UTF-8", "-Dsonar.analysis.runtype=gaeaapi"}
+}
+
+func getEnv(envstr string, fallback ...string) string {
+	e := os.Getenv(envstr)
+	if e == "" && len(fallback) > 0 {
+		e = fallback[0]
+	}
+	logrus.Debugf("==> Try Detect Env: %v, value: %v", envstr, e)
+	return e
 }
