@@ -235,5 +235,6 @@ func getEnv(envstr string, fallback ...string) string {
 	if e == "" && len(fallback) > 0 {
 		e = fallback[0]
 	}
+	logrus.Debugf("==> Try Detect Env: %v, value: %v", envstr, e)
 	return e
 }
